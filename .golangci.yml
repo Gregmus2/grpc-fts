@@ -1,0 +1,43 @@
+run:
+  skip-dirs:
+    - internal/mocks
+  tests: false
+  allow-parallel-runners: true
+  timeout: 5m
+linters:
+  enable-all: true
+  disable:
+    - gochecknoglobals
+    - godox
+    - gochecknoinits
+    - lll
+    - scopelint
+    - interfacer
+    - exhaustivestruct
+    - wsl
+    - goerr113
+    - wrapcheck
+    - gomnd
+    - godot
+    - goimports
+    - gofumpt
+    - gci
+    - typecheck
+    - cyclop
+    - forcetypeassert
+    - ireturn
+    - varnamelen
+    - exhaustruct
+    - nosnakecase
+    - golint
+    - structcheck
+    - varcheck
+    - deadcode
+    - ifshort
+    - maligned
+    - tagliatelle
+  fast: false
+linters-settings:
+  govet:
+    disable:
+      - composites
