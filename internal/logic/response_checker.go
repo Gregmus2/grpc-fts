@@ -120,6 +120,9 @@ func (c *responseChecker) CheckStatus(actual *status.Status, expectation *config
 }
 
 func (c *responseChecker) checkObject(path string, expectations map[string]any, object reflect.Value) ([]models.ValidationFail, error) {
+	if object.Kind() == reflect.Interface {
+		object = object.Elem()
+	}
 	if !object.IsValid() {
 		return []models.ValidationFail{
 			models.Fail(path, "", expectations, "nil"),
