@@ -30,6 +30,9 @@ func NewVariables(ctx *cli.Context) (Variables, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error parsing service config")
 	}
+	if variables == nil {
+		variables = make(Variables)
+	}
 
 	for _, variable := range ctx.StringSlice("var") {
 		kv := strings.SplitN(variable, "=", 2)
