@@ -75,11 +75,16 @@ func (r *runner) check(step config.Step, status *status.Status, response map[str
 }
 
 func (r *runner) failed(fails []models.ValidationFail, testCase string, step int) {
-	r.logger.Warnf("test case %s, step %d finished with some fails:", testCase, step)
+	entry := r.logger
 	for _, fail := range fails {
-		r.logger.Warnf("Field: %s, Function: %s", fail.Field, fail.Function)
-		r.logger.Warnf("Expected: %v, Actual: %s", fail.Expectation, fail.ActualValue)
+		entry = entry.WithFields(logrus.Fields{
+			"field":    fail.Field,
+			"function": fail.Function,
+			"expected": fail.Expectation,
+			"actual":   fail.ActualValue,
+		})
 	}
+	entry.Warnf("test case %s, step %d finished with some fails", testCase, step)
 }
 
 func (r *runner) prepareRequest(stepMD, serviceMD config.Metadata, request json.RawMessage) (map[string]string, json.RawMessage, error) {
