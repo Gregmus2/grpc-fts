@@ -4,11 +4,11 @@ run:
   tests: false
   allow-parallel-runners: true
   timeout: 5m
+  modules-download-mode: readonly
 linters:
   enable-all: true
   disable:
     - gochecknoglobals
-    - godox
     - gochecknoinits
     - lll
     - scopelint
@@ -22,20 +22,25 @@ linters:
     - goimports
     - gofumpt
     - gci
-    - typecheck
-    - cyclop
     - forcetypeassert
     - ireturn
+    - nilnil
     - varnamelen
+    - contextcheck
+    - maligned
+    - golint
     - exhaustruct
     - nosnakecase
-    - golint
-    - structcheck
+    - ifshort
     - varcheck
     - deadcode
-    - ifshort
-    - maligned
+    - structcheck
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
     - tagliatelle
+    - nonamedreturns
+    - depguard
   fast: false
 linters-settings:
   govet:
