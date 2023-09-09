@@ -46,13 +46,34 @@ func NewTestCases(ctx *cli.Context, logger *logrus.Entry, services Services) (Te
 		return nil, errors.Wrap(err, "error on reading test-cases dir")
 	}
 
+	testCases, err := collectTestCases(ctx.String("configs"), files, services)
+	if err != nil {
+		return nil, err
+	}
+
+	if ctx.String("target") != "" {
+		testCases, err = testCases.Filter(ctx.String("target"))
+		if err != nil {
+			return nil, errors.Wrapf(err, "error filtering test cases")
+		}
+	}
+
+	testCases, err = Sort(testCases)
+	if err != nil {
+		return nil, errors.Wrapf(err, "test case dependency error")
+	}
+
+	return testCases, nil
+}
+
+func collectTestCases(configDir string, files []os.DirEntry, services Services) (TestCases, error) {
 	testCases := make(TestCases, 0, len(files))
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 
-		filePath := ctx.String("configs") + "/test-cases/" + file.Name()
+		filePath := configDir + "/test-cases/" + file.Name()
 		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error reading %s", filePath)
@@ -75,10 +96,38 @@ func NewTestCases(ctx *cli.Context, logger *logrus.Entry, services Services) (Te
 		testCases = append(testCases, testCase)
 	}
 
-	testCases, err = Sort(testCases)
-	if err != nil {
-		return nil, errors.Wrapf(err, "test case dependency error")
+	return testCases, nil
+}
+
+func (t TestCases) Filter(target string) (TestCases, error) {
+	var targetTestCase TestCase
+	for _, testCase := range t {
+		if testCase.Name == target {
+			targetTestCase = testCase
+
+			break
+		}
 	}
 
-	return testCases, nil
+	if targetTestCase.Name == "" {
+		return nil, errors.New("target test case not found")
+	}
+
+	return append(t.CollectDependencies(targetTestCase), targetTestCase), nil
+}
+
+func (t TestCases) CollectDependencies(target TestCase) TestCases {
+	result := make(TestCases, 0)
+	for _, testCase := range t {
+		for _, dependsOn := range target.DependsOn {
+			if dependsOn == testCase.Name {
+				result = append(result, testCase)
+				result = append(result, t.CollectDependencies(testCase)...)
+
+				break
+			}
+		}
+	}
+
+	return result
 }

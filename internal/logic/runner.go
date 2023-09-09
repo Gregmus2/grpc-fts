@@ -30,6 +30,7 @@ func (r *runner) RunTestCases() (err error) {
 	for _, testCase := range r.testCases {
 		if failed, dependency := failedTestCases.HasDependencyFailed(testCase.DependsOn); failed {
 			r.logger.Infof("test case %s skipped due to failed dependency %s", testCase.Name, dependency)
+			failedTestCases.Add(testCase.Name)
 
 			continue
 		}

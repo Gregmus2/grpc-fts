@@ -21,6 +21,10 @@ func main() {
 				Value: cli.NewStringSlice(),
 				Usage: "user defined variables, format: key=value",
 			},
+			&cli.StringFlag{
+				Name:  "target",
+				Usage: "to run only specific test case, format: test_case_name",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			app, err := internal.NewApp(ctx)
