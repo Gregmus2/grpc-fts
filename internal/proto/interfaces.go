@@ -4,7 +4,6 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -17,7 +16,7 @@ type ClientsManager interface {
 }
 
 type Client interface {
-	Invoke(fullName protoreflect.FullName, msg []byte, metadata metadata.MD) (map[string]interface{}, *status.Status, error)
+	Invoke(fullName protoreflect.FullName, msg []byte, metadata metadata.MD) (*GRPCResponse, error)
 }
 
 type connection interface {

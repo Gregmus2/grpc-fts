@@ -109,3 +109,27 @@ Additional services can be added in `services.yaml` file:
 ```
 
 TODO global config
+
+## Streams
+
+Currently only server side streams are supported. Within this mode, the response that you are gonna specify
+in "response" key will apply for each element of the stream until it will be matched. In order to prevent
+utility from stuck, you can specify "timeout" key under "metadata" key in step object. It will be applied for entire call (including all messages).
+Status checks will apply for each element of the stream.
+
+Example
+```yaml
+steps:
+  - service: foo
+    method: Listen
+    request:
+      id: "some id"
+    metadata:
+      timeout: 5s
+    response:
+      user_data:
+        age: { gte: 13 }
+        name: "some name"
+        created: { gt: 1254568 }
+      some_field: 5
+```

@@ -9,7 +9,6 @@ import (
 	"github.com/res-am/grpc-fts/internal/proto"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -36,6 +35,7 @@ func (r *runner) RunTestCases() (err error) {
 		}
 
 		for i, step := range testCase.Steps {
+			// todo add timeout option to request and apply it for stream and unary
 			md, request, err := r.prepareRequest(step.Metadata, step.Service.Metadata, step.Request)
 			if err != nil {
 				return errors.Wrapf(err, "for step %d of test case %s", i, testCase.Name)
@@ -43,12 +43,12 @@ func (r *runner) RunTestCases() (err error) {
 
 			fullName := protoreflect.FullName(fmt.Sprintf("%s.%s", step.Service.Service, step.Method))
 			client := r.clients.GetClient(step.ServiceName)
-			response, stat, err := client.Invoke(fullName, request, metadata.New(md))
+			response, err := client.Invoke(fullName, request, metadata.New(md))
 			if err != nil {
 				return errors.Wrapf(err, "error on calling service %s", step.ServiceName)
 			}
 
-			fails, err := r.check(step, stat, response)
+			fails, err := r.check(step, response)
 			if errors.Is(err, ErrValidationFailed) {
 				failedTestCases.Add(testCase.Name)
 				r.failed(fails, testCase.Name, i)
@@ -66,13 +66,37 @@ func (r *runner) RunTestCases() (err error) {
 	return nil
 }
 
-func (r *runner) check(step config.Step, status *status.Status, response map[string]interface{}) ([]models.ValidationFail, error) {
-	statusFails, err := r.checker.CheckStatus(status, step.Status)
+func (r *runner) check(step config.Step, response *proto.GRPCResponse) ([]models.ValidationFail, error) {
+	statusFails, err := r.checker.CheckStatus(response.Status, step.Status)
 	if err != nil {
 		return statusFails, err
 	}
 
-	return r.checker.CheckResponse(response, step.Response)
+	if !response.IsStream {
+		return r.checker.CheckResponse(response.Response, step.Response)
+	}
+
+	for i := 0; ; i++ {
+		err := response.StreamReceive()
+		if err != nil {
+			return nil, errors.Wrap(err, "error on stream receiving")
+		}
+
+		statusFails, err := r.checker.CheckStatus(response.Status, step.Status)
+		if err != nil {
+			return statusFails, err
+		}
+
+		fails, err := r.checker.CheckResponse(response.Response, step.Response)
+		if err != nil && !errors.Is(err, ErrValidationFailed) {
+			return nil, errors.Wrapf(err, "error checking stream message #%d", i)
+		}
+
+		// successful exit
+		if len(fails) == 0 {
+			return nil, nil
+		}
+	}
 }
 
 func (r *runner) failed(fails []models.ValidationFail, testCase string, step int) {
