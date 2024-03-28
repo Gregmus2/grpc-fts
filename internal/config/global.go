@@ -11,6 +11,8 @@ type Global struct {
 	ProtoRoot    string   `json:"proto_root"`
 	ProtoImports []string `json:"proto_imports"`
 	ProtoSources []string `json:"proto_sources"`
+	Format       string   `json:"format"`
+	Timestamp    bool     `json:"timestamp"`
 }
 
 func NewGlobal(ctx *cli.Context) (*Global, error) {
