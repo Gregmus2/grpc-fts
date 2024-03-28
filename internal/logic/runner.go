@@ -34,6 +34,7 @@ func (r *runner) RunTestCases() (err error) {
 			continue
 		}
 
+	TestCaseLoop:
 		for i, step := range testCase.Steps {
 			// todo add timeout option to request and apply it for stream and unary
 			md, request, err := r.prepareRequest(step.Metadata, step.Service.Metadata, step.Request)
@@ -53,7 +54,7 @@ func (r *runner) RunTestCases() (err error) {
 				failedTestCases.Add(testCase.Name)
 				r.failed(fails, testCase.Name, i)
 
-				break
+				break TestCaseLoop
 			}
 			if err != nil {
 				return errors.Wrapf(err, "response validation error")
