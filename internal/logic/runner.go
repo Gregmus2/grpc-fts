@@ -26,6 +26,7 @@ func NewRunner(testCases config.TestCases, clients proto.ClientsManager, logger 
 
 func (r *runner) RunTestCases() (err error) {
 	failedTestCases := make(failedDependencies)
+TestCaseLoop:
 	for _, testCase := range r.testCases {
 		if failed, dependency := failedTestCases.HasDependencyFailed(testCase.DependsOn); failed {
 			r.logger.Infof("test case %s skipped due to failed dependency %s", testCase.Name, dependency)
@@ -34,7 +35,6 @@ func (r *runner) RunTestCases() (err error) {
 			continue
 		}
 
-	TestCaseLoop:
 		for i, step := range testCase.Steps {
 			// todo add timeout option to request and apply it for stream and unary
 			md, request, err := r.prepareRequest(step.Metadata, step.Service.Metadata, step.Request)
