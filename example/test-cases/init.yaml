@@ -1,0 +1,7 @@
+steps:
+  - service: entity
+    method: CreateEntity
+    request:
+      name: $jobID
+    response:
+        id: { store: entity_id }

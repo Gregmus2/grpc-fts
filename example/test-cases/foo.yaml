@@ -1,0 +1,17 @@
+steps:
+   - service: foo
+     method: FooList
+     request:
+       parameters:
+         x: 38.00835
+         y: 23.77064
+         z: 0
+         country: NL
+         type:
+         - SOME_TYPE
+         date_filter:
+             from: 1680296400
+             to: 1697058000
+     response:
+       entities: { len: 8 }
+       total: "8"

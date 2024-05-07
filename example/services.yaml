@@ -1,0 +1,9 @@
+foo:
+    service: package1.Foo
+    address: "foo:9000"
+
+bar:
+    service: package2.Bar
+    address: "bar:9000"
+    metadata:
+        authorization: $authorization

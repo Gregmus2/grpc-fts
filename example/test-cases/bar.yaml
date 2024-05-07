@@ -1,0 +1,35 @@
+depends_on:
+  - init
+
+steps:
+  - service: bar
+    method: Bar1
+    request:
+      filename: MyFile.csv
+      entity_id: $entity_id
+    response:
+      report:
+        stat:
+          rows: 28
+          columns: 18
+          columnsWithAllFieldsMissing: 0
+          duplicates: 0
+          cellsMissing: 77
+          columnsWithFieldsMissing: 9
+      suggestions:
+        - { originalColumnName: Description, assignedField: asset_description }
+        - { originalColumnName: Country, assignedField: country }
+        - { originalColumnName: City, assignedField: city }
+        - { originalColumnName: Entity id, assignedField: entity_id }
+
+  - service: bar
+    method: GetBar
+    request:
+      jobID: $jobID
+    response:
+      flags:
+        success:
+          - { name: Entity id, count: 28 }
+          - { name: Description, count: 28 }
+          - { name: Country, count: 28 }
+          - { name: City, count: 28 }

@@ -1,0 +1,6 @@
+proto_root: "/path/to/proto"
+proto_sources:
+  - "package1"
+  - "package2"
+proto_imports:
+  - "/include"
