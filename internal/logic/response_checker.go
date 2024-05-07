@@ -73,6 +73,10 @@ func NewResponseChecker(variables Variables) ResponseChecker {
 			action:         validator.store,
 			supportedTypes: scalarTypes,
 		},
+		"not": {
+			action:         validator.notCheck,
+			supportedTypes: append(scalarTypes, reflect.Map, reflect.Slice),
+		},
 	}
 
 	return validator
@@ -415,6 +419,15 @@ func (c *responseChecker) equalCheck(expectation any, val reflect.Value) (bool, 
 	default:
 		return false, fmt.Errorf("unsopported type %s", val.Kind())
 	}
+}
+
+func (c *responseChecker) notCheck(expectation any, val reflect.Value) (bool, error) {
+	fails, err := c.checkValue("", expectation, val)
+	if err != nil && !errors.Is(err, ErrValidationFailed) {
+		return false, errors.Wrap(err, "error checking `not`")
+	}
+
+	return len(fails) != 0, nil
 }
 
 func isSlice(val reflect.Value) bool {

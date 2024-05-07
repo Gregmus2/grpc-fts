@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"github.com/res-am/grpc-fts/internal"
+	"github.com/res-am/grpc-fts/internal/models"
 	"github.com/urfave/cli/v2"
 	"os"
 )
@@ -25,6 +27,10 @@ func main() {
 				Name:  "target",
 				Usage: "to run only specific test case, format: test_case_name",
 			},
+			&cli.BoolFlag{
+				Name:  "verbose",
+				Usage: "verbose output",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			app, err := internal.NewApp(ctx)
@@ -32,7 +38,13 @@ func main() {
 				return err
 			}
 
-			return app.RunTestCases()
+			err = app.RunTestCases()
+			var userErr models.UserErr
+			if !ctx.Bool("verbose") && errors.As(err, &userErr) {
+				return userErr
+			}
+
+			return err
 		},
 	}
 

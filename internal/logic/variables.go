@@ -67,7 +67,7 @@ func (v Variables) Find(source string) (string, error) {
 	return "", errors.Wrap(ErrVariableNotFound, variable)
 }
 
-func (v Variables) ReplaceRequest(source []byte) ([]byte, error) {
+func (v Variables) ReplaceInJson(source []byte) ([]byte, error) {
 	matches := replacerRegExp.FindAll(source, -1)
 	for _, match := range matches {
 		variable, err := v.Find(string(match))
@@ -92,4 +92,29 @@ func (v Variables) ReplaceMap(md map[string]string) error {
 	}
 
 	return nil
+}
+
+func (v Variables) ReplaceResponse(response map[string]interface{}) (map[string]interface{}, error) {
+	for key, value := range response {
+		switch val := value.(type) {
+		case string:
+			replaced, err := v.Find(val)
+			if err != nil {
+				return nil, err
+			}
+
+			response[key] = replaced
+		case []interface{}:
+		case map[string]interface{}:
+			replaced, err := v.ReplaceResponse(val)
+			if err != nil {
+				return nil, err
+			}
+
+			response[key] = replaced
+		}
+
+	}
+
+	return response, nil
 }

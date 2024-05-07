@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"github.com/res-am/grpc-fts/internal/models"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -25,7 +26,7 @@ type Step struct {
 	ServiceName string `json:"service"`
 	Method      string
 	Request     json.RawMessage
-	Response    map[string]interface{}
+	Response    json.RawMessage
 	Status      *Status
 	Metadata    Metadata
 	Store       map[string]interface{}
@@ -86,7 +87,12 @@ func collectTestCases(configDir string, files []os.DirEntry, services Services) 
 		}
 
 		for i := range testCase.Steps {
-			testCase.Steps[i].Service = services[testCase.Steps[i].ServiceName]
+			service, exists := services[testCase.Steps[i].ServiceName]
+			if !exists {
+				return nil, models.NewErr("service '" + testCase.Steps[i].ServiceName + "' not found")
+			}
+
+			testCase.Steps[i].Service = service
 		}
 
 		if testCase.Name == "" {

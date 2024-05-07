@@ -49,7 +49,12 @@ TestCaseLoop:
 				return errors.Wrapf(err, "error on calling service %s", step.ServiceName)
 			}
 
-			fails, err := r.check(step, response)
+			expectedResponse, err := r.prepareResponse(step.Response)
+			if err != nil {
+				return errors.Wrapf(err, "error on preparing expected response for step %d of test case %s", i, testCase.Name)
+			}
+
+			fails, err := r.check(step.Status, expectedResponse, response)
 			if errors.Is(err, ErrValidationFailed) {
 				failedTestCases.Add(testCase.Name)
 				r.failed(fails, testCase.Name, i)
@@ -67,14 +72,14 @@ TestCaseLoop:
 	return nil
 }
 
-func (r *runner) check(step config.Step, response *proto.GRPCResponse) ([]models.ValidationFail, error) {
-	statusFails, err := r.checker.CheckStatus(response.Status, step.Status)
+func (r *runner) check(expectedStatus *config.Status, expectedResponse map[string]any, response *proto.GRPCResponse) ([]models.ValidationFail, error) {
+	statusFails, err := r.checker.CheckStatus(response.Status, expectedStatus)
 	if err != nil {
 		return statusFails, err
 	}
 
 	if !response.IsStream {
-		return r.checker.CheckResponse(response.Response, step.Response)
+		return r.checker.CheckResponse(response.Response, expectedResponse)
 	}
 
 	for i := 0; ; i++ {
@@ -83,12 +88,12 @@ func (r *runner) check(step config.Step, response *proto.GRPCResponse) ([]models
 			return nil, errors.Wrap(err, "error on stream receiving")
 		}
 
-		statusFails, err := r.checker.CheckStatus(response.Status, step.Status)
+		statusFails, err := r.checker.CheckStatus(response.Status, expectedStatus)
 		if err != nil {
 			return statusFails, err
 		}
 
-		fails, err := r.checker.CheckResponse(response.Response, step.Response)
+		fails, err := r.checker.CheckResponse(response.Response, expectedResponse)
 		if err != nil && !errors.Is(err, ErrValidationFailed) {
 			return nil, errors.Wrapf(err, "error checking stream message #%d", i)
 		}
@@ -120,10 +125,29 @@ func (r *runner) prepareRequest(stepMD, serviceMD config.Metadata, request json.
 	}
 	md := serviceMD.MergeWith(stepMD)
 
-	req, err := r.variables.ReplaceRequest(request)
+	req, err := r.variables.ReplaceInJson(request)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "error on replacing variables in request")
 	}
 
 	return md, req, nil
+}
+
+func (r *runner) prepareResponse(response json.RawMessage) (map[string]any, error) {
+	if len(response) == 0 {
+		return nil, nil
+	}
+
+	rawResponse, err := r.variables.ReplaceInJson(response)
+	if err != nil {
+		return nil, errors.Wrap(err, "error on replacing variables in response")
+	}
+
+	var responseMap map[string]any
+	err = json.Unmarshal(rawResponse, &responseMap)
+	if err != nil {
+		return nil, errors.Wrap(err, "error on unmarshalling response")
+	}
+
+	return responseMap, nil
 }

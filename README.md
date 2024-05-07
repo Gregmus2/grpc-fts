@@ -60,6 +60,8 @@ steps:
     #     gte    - greater than or equal ( bedrooms: { gte: 1 } )
     #     lt     - lesser than  ( bedrooms: { lt: 3 } )
     #     lte    - lesser than or equal  ( bedrooms: { lte: 2 } )
+    #     not    - condition or value ahead is not true ( not: { eq: 2 } )
+    #     first  - check first value of a slice ( some_array: { first: 2 } )
     #     one_of - value expected to be equal at least with one of elements
     #         ( Country: { one_of: [IT, CY, GR] } )
     #         ( one_of:

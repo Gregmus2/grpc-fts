@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/res-am/grpc-fts/internal/models"
@@ -19,6 +20,9 @@ type Service struct {
 
 func NewServices(ctx *cli.Context) (Services, error) {
 	file, err := os.ReadFile(ctx.String("configs") + "/services.yaml")
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, models.NewErr("services.yaml file not found")
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading service config")
 	}
@@ -26,7 +30,7 @@ func NewServices(ctx *cli.Context) (Services, error) {
 	var config Services
 	err = yaml.Unmarshal(file, &config)
 	if err != nil {
-		return nil, errors.Wrap(err, "error parsing service config")
+		return nil, models.NewErr(fmt.Sprintf("error parsing service config: %s", err.Error()))
 	}
 
 	return config, nil
