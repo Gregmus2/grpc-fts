@@ -1,6 +1,6 @@
 module github.com/res-am/grpc-fts
 
-go 1.20
+go 1.21
 
 require (
 	github.com/bufbuild/protocompile v0.5.1
