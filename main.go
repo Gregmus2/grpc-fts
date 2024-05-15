@@ -33,12 +33,10 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			app, err := internal.NewApp(ctx)
+			err := internal.RunTestCase(ctx)
 			if err != nil {
 				return err
 			}
-
-			err = app.RunTestCases()
 			var userErr models.UserErr
 			if !ctx.Bool("verbose") && errors.As(err, &userErr) {
 				return userErr
