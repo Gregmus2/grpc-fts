@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 type DescriptorsManager interface {
@@ -17,6 +18,7 @@ type ClientsManager interface {
 
 type Client interface {
 	Invoke(fullName protoreflect.FullName, msg []byte, metadata metadata.MD) (*GRPCResponse, error)
+	BuildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*dynamicpb.Message, error)
 }
 
 type connection interface {

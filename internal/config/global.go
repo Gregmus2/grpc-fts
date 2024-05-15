@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
 	"os"
 )
 
@@ -15,8 +14,8 @@ type Global struct {
 	Timestamp    bool     `json:"timestamp"`
 }
 
-func NewGlobal(ctx *cli.Context) (*Global, error) {
-	file, err := os.ReadFile(ctx.String("configs") + "/global.yaml")
+func NewGlobal(ctx ContextWrapper) (*Global, error) {
+	file, err := os.ReadFile(ctx.ConfigFlag() + "/global.yaml")
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading service config")
 	}

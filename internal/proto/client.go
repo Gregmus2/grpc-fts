@@ -31,7 +31,7 @@ func (c client) Invoke(fullName protoreflect.FullName, msg []byte, md metadata.M
 	}
 
 	descriptor := c.manager.GetDescriptor(fullName)
-	req, err := c.buildRequest(descriptor.Input(), msg)
+	req, err := c.BuildRequest(descriptor.Input(), msg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build request")
 	}
@@ -86,7 +86,7 @@ func (c client) createContext(md metadata.MD) (context.Context, error) {
 	return ctx, nil
 }
 
-func (c client) buildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*dynamicpb.Message, error) {
+func (c client) BuildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*dynamicpb.Message, error) {
 	req := dynamicpb.NewMessage(desc)
 	err := c.dec.Unmarshal(msg, req)
 	if errors.Is(err, io.EOF) {

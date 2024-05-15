@@ -12,5 +12,6 @@ type Runner interface {
 
 type ResponseChecker interface {
 	CheckResponse(response map[string]interface{}, expectations map[string]interface{}) ([]models.ValidationFail, error)
-	CheckStatus(*status.Status, *config.Status) ([]models.ValidationFail, error)
+	CheckStatus(status *status.Status, cfg *config.Status) ([]models.ValidationFail, error)
+	FunctionExists(function string) bool
 }

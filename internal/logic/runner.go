@@ -2,14 +2,12 @@ package logic
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/res-am/grpc-fts/internal/config"
 	"github.com/res-am/grpc-fts/internal/models"
 	"github.com/res-am/grpc-fts/internal/proto"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type runner struct {
@@ -39,12 +37,11 @@ TestCaseLoop:
 			// todo add timeout option to request and apply it for stream and unary
 			md, request, err := r.prepareRequest(step.Metadata, step.Service.Metadata, step.Request)
 			if err != nil {
-				return errors.Wrapf(err, "for step %d of test case %s", i, testCase.Name)
+				return errors.Wrapf(err, "for step %d of test case %s", i+1, testCase.Name)
 			}
 
-			fullName := protoreflect.FullName(fmt.Sprintf("%s.%s", step.Service.Service, step.Method))
 			client := r.clients.GetClient(step.ServiceName)
-			response, err := client.Invoke(fullName, request, metadata.New(md))
+			response, err := client.Invoke(step.BuildProtoFullName(), request, metadata.New(md))
 			if err != nil {
 				return errors.Wrapf(err, "error on calling service %s", step.ServiceName)
 			}
@@ -115,7 +112,7 @@ func (r *runner) failed(fails []models.ValidationFail, testCase string, step int
 			"actual":   fail.ActualValue,
 		})
 	}
-	entry.Warnf("test case %s, step %d finished with some fails", testCase, step)
+	entry.Warnf("test case %s, step %d finished with some fails", testCase, step+1)
 }
 
 func (r *runner) prepareRequest(stepMD, serviceMD config.Metadata, request json.RawMessage) (map[string]string, json.RawMessage, error) {

@@ -2,11 +2,12 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/res-am/grpc-fts/internal/models"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"os"
 	"path/filepath"
 )
@@ -21,7 +22,7 @@ type TestCase struct {
 
 type Function string
 
-// todo configuration validation, especially service reference and method existence
+// todo configuration validation, especially method existence
 type Step struct {
 	ServiceName string `json:"service"`
 	Method      string
@@ -34,26 +35,30 @@ type Step struct {
 	Service     Service `json:"-"`
 }
 
+func (s Step) BuildProtoFullName() protoreflect.FullName {
+	return protoreflect.FullName(fmt.Sprintf("%s.%s", s.Service.Service, s.Method))
+}
+
 type Status struct {
 	Code    *string
 	Message *string
 }
 
-func NewTestCases(ctx *cli.Context, logger *logrus.Entry, services Services) (TestCases, error) {
-	files, err := os.ReadDir(ctx.String("configs") + "/test-cases")
+func NewTestCases(ctx ContextWrapper, logger *logrus.Entry, services Services) (TestCases, error) {
+	files, err := os.ReadDir(ctx.ConfigFlag() + "/test-cases")
 	if err != nil {
 		logger.Errorf("error on reading test-cases dir: %s", err)
 
 		return nil, errors.Wrap(err, "error on reading test-cases dir")
 	}
 
-	testCases, err := collectTestCases(ctx.String("configs"), files, services)
+	testCases, err := collectTestCases(ctx.ConfigFlag(), files, services)
 	if err != nil {
 		return nil, err
 	}
 
-	if ctx.String("target") != "" {
-		testCases, err = testCases.Filter(ctx.String("target"))
+	if ctx.TargetFlag() != "" {
+		testCases, err = testCases.Filter(ctx.TargetFlag())
 		if err != nil {
 			return nil, errors.Wrapf(err, "error filtering test cases")
 		}

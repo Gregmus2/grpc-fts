@@ -5,7 +5,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/res-am/grpc-fts/internal/config"
-	"github.com/urfave/cli/v2"
 	"os"
 	"regexp"
 	"strings"
@@ -16,8 +15,8 @@ var replacerRegExp = regexp.MustCompile(`\$\w+`)
 
 type Variables map[string]string
 
-func NewVariables(ctx *cli.Context) (Variables, error) {
-	file, err := os.ReadFile(ctx.String("configs") + "/variables.yaml")
+func NewVariables(ctx config.ContextWrapper) (Variables, error) {
+	file, err := os.ReadFile(ctx.ConfigFlag() + "/variables.yaml")
 	if errors.Is(err, os.ErrNotExist) {
 		return make(Variables), nil
 	}
@@ -34,7 +33,7 @@ func NewVariables(ctx *cli.Context) (Variables, error) {
 		variables = make(Variables)
 	}
 
-	for _, variable := range ctx.StringSlice("var") {
+	for _, variable := range ctx.VarFlag() {
 		kv := strings.SplitN(variable, "=", 2)
 		variables[kv[0]] = kv[1]
 	}

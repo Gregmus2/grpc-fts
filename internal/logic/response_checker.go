@@ -82,6 +82,12 @@ func NewResponseChecker(variables Variables) ResponseChecker {
 	return validator
 }
 
+func (c *responseChecker) FunctionExists(function string) bool {
+	_, ok := c.functions[function]
+
+	return ok
+}
+
 func (c *responseChecker) executeFunction(function string, expectation any, val reflect.Value) (bool, error) {
 	model, ok := c.functions[function]
 	if !ok {

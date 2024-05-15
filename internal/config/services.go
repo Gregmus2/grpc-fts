@@ -5,7 +5,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/res-am/grpc-fts/internal/models"
-	"github.com/urfave/cli/v2"
 	"os"
 )
 
@@ -18,8 +17,8 @@ type Service struct {
 	Metadata Metadata
 }
 
-func NewServices(ctx *cli.Context) (Services, error) {
-	file, err := os.ReadFile(ctx.String("configs") + "/services.yaml")
+func NewServices(ctx ContextWrapper) (Services, error) {
+	file, err := os.ReadFile(ctx.ConfigFlag() + "/services.yaml")
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, models.NewErr("services.yaml file not found")
 	}
