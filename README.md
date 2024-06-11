@@ -112,6 +112,8 @@ Additional services can be added in `services.yaml` file:
 
 TODO global config
 
+TODO support proto repo clone
+
 ## Streams
 
 Currently only server side streams are supported. Within this mode, the response that you are gonna specify
