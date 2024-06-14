@@ -47,6 +47,15 @@ func NewDescriptorsManager(cfg *config.Global, testCases config.TestCases) (Desc
 
 func collectFiles(sources []string, root string) ([]string, error) {
 	files := make([]string, 0)
+	var err error
+
+	if len(sources) == 0 {
+		sources, err = fileList(root)
+		if err != nil {
+			return nil, errors.Wrap(err, "error reading proto sources")
+		}
+	}
+
 	for _, source := range sources {
 		info, err := os.Stat(root + "/" + source)
 		if os.IsNotExist(err) {
@@ -67,6 +76,22 @@ func collectFiles(sources []string, root string) ([]string, error) {
 		} else {
 			files = append(files, source)
 		}
+	}
+
+	return files, nil
+}
+
+func fileList(root string) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if !d.IsDir() && filepath.Ext(path) == ".proto" {
+			files = append(files, strings.Replace(path, root+"/", "", 1))
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "error reading proto files")
 	}
 
 	return files, nil

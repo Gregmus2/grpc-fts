@@ -34,6 +34,17 @@ func main() {
 					return internal.NewContainer(ctx).Validate()
 				},
 			},
+			{
+				Name:  "init",
+				Usage: "init fts project",
+				Flags: []cli.Flag{
+					config.VerboseFlagSetup,
+					config.DirectoryFlagSetup,
+				},
+				Action: func(ctx *cli.Context) error {
+					return internal.NewContainer(ctx).Init()
+				},
+			},
 		},
 	}
 

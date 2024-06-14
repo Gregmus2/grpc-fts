@@ -9,21 +9,21 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type Validator struct {
+type validator struct {
 	clientsManager proto.ClientsManager
 	manager        proto.DescriptorsManager
 	checker        ResponseChecker
 }
 
-func NewValidator(clientsManager proto.ClientsManager, manager proto.DescriptorsManager, checker ResponseChecker) *Validator {
-	return &Validator{
+func NewValidator(clientsManager proto.ClientsManager, manager proto.DescriptorsManager, checker ResponseChecker) Validator {
+	return &validator{
 		clientsManager: clientsManager,
 		manager:        manager,
 		checker:        checker,
 	}
 }
 
-func (v Validator) Validate(testCases config.TestCases) error {
+func (v validator) Validate(testCases config.TestCases) error {
 	for _, testCase := range testCases {
 		if err := v.validateTestCase(testCase); err != nil {
 			return errors.Wrapf(err, "test case %s", testCase.Name)
@@ -33,7 +33,7 @@ func (v Validator) Validate(testCases config.TestCases) error {
 	return nil
 }
 
-func (v Validator) validateTestCase(testCase config.TestCase) error {
+func (v validator) validateTestCase(testCase config.TestCase) error {
 	for i, step := range testCase.Steps {
 		if err := v.validateStep(step); err != nil {
 			return errors.Wrapf(err, "step %d", i+1)
@@ -43,7 +43,7 @@ func (v Validator) validateTestCase(testCase config.TestCase) error {
 	return nil
 }
 
-func (v Validator) validateStep(step config.Step) error {
+func (v validator) validateStep(step config.Step) error {
 	fullName := step.BuildProtoFullName()
 	descriptor := v.manager.GetDescriptor(fullName)
 
@@ -58,7 +58,7 @@ func (v Validator) validateStep(step config.Step) error {
 	return nil
 }
 
-func (v Validator) validateRequest(service string, input protoreflect.MessageDescriptor, request json.RawMessage) error {
+func (v validator) validateRequest(service string, input protoreflect.MessageDescriptor, request json.RawMessage) error {
 	_, err := v.clientsManager.GetClient(service).BuildRequest(input, request)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (v Validator) validateRequest(service string, input protoreflect.MessageDes
 	return nil
 }
 
-func (v Validator) validateResponse(fields protoreflect.FieldDescriptors, response json.RawMessage) error {
+func (v validator) validateResponse(fields protoreflect.FieldDescriptors, response json.RawMessage) error {
 	if len(response) == 0 {
 		return nil
 	}
@@ -106,11 +106,11 @@ func (v responseValidator) validate(fields protoreflect.FieldDescriptors, respon
 }
 
 func (v responseValidator) validateValue(fields protoreflect.FieldDescriptors, value any) error {
-	switch value.(type) {
+	switch t := value.(type) {
 	case map[string]any:
-		return v.validate(fields, value.(map[string]any))
+		return v.validate(fields, t)
 	case []any:
-		for _, item := range value.([]any) {
+		for _, item := range t {
 			err := v.validateValue(fields, item)
 			if err != nil {
 				return err

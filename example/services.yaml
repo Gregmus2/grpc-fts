@@ -1,9 +1,12 @@
 foo:
+    # full service name with package
     service: package1.Foo
+    # address to your service with port included
     address: "foo:9000"
 
 bar:
     service: package2.Bar
     address: "bar:9000"
+    # you can provide any metadata that your service requires
     metadata:
         authorization: $authorization

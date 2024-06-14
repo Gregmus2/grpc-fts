@@ -1,2 +1,2 @@
+# variables can be used in services metadata or in test-cases (requests, responses)
 authorization: some-token
-jobID: 123

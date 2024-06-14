@@ -33,8 +33,16 @@ func (c Container) RunTestCase() error {
 
 func (c Container) Validate() error {
 	return c.runApp(
-		fx.Invoke(func(validator *logic.Validator, testCases config.TestCases) error {
+		fx.Invoke(func(validator logic.Validator, testCases config.TestCases) error {
 			return validator.Validate(testCases)
+		}),
+	)
+}
+
+func (c Container) Init() error {
+	return c.runApp(
+		fx.Invoke(func(setupHelper logic.SetupHelper) error {
+			return setupHelper.Setup()
 		}),
 	)
 }
@@ -51,6 +59,7 @@ func (c Container) buildDIContainer() fx.Option {
 		logic.NewResponseChecker,
 		logic.NewRunner,
 		logic.NewValidator,
+		logic.NewSetupHelper,
 		c.contextWrapper(c.ctx),
 	)
 }

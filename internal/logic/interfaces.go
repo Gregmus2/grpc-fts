@@ -15,3 +15,11 @@ type ResponseChecker interface {
 	CheckStatus(status *status.Status, cfg *config.Status) ([]models.ValidationFail, error)
 	FunctionExists(function string) bool
 }
+
+type Validator interface {
+	Validate(testCases config.TestCases) error
+}
+
+type SetupHelper interface {
+	Setup() error
+}

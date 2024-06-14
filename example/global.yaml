@@ -1,6 +1,6 @@
-proto_root: "/path/to/proto"
+proto_root: "path to root directory with your proto files"
 proto_sources:
-  - "package1"
-  - "package2"
+  - "it can be relative path (in proto root) to directory with proto files"
+  - "or it can be relative path (in proto root) to some specific proto file"
 proto_imports:
-  - "/include"
+  - "path to additional proto imports, like google protobuf utilities for example"
