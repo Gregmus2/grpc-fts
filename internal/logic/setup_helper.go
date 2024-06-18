@@ -7,8 +7,7 @@ import (
 )
 
 type setupHelper struct {
-	dir       string
-	protoRoot string
+	dir string
 }
 
 func NewSetupHelper(ctx config.ContextWrapper) SetupHelper {

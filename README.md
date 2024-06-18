@@ -20,6 +20,36 @@ target app would be too complex and expensive from time (and, perhaps, resources
 * Run - database entity, that contains information about single run of this service in command-line or
   worker modes.
 
+## Installation
+
+Download
+```bash
+wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.0/fts
+```
+Run init command to create a new project
+```shell
+./fts init
+```
+
+It will create a new project with the following structure:
+```
+test-cases/     <- put your test cases here
+    .gkeep  
+global.yaml     <- basic required configuration
+services.yaml   <- services definition
+variables.yaml  <- variables definition if needed
+```
+
+Now you can fill configuration, write test cases and validate them.
+```shell
+./fts validate
+```
+
+If everything is ok, you can run tests
+```shell
+./fts run
+```
+
 ## How it works
 
 This is a command-line tool first of all. Tests will be run just once and script will be finished.
@@ -27,10 +57,12 @@ TODO describe options
 
 ## How to write tests
 
-TODO define initial steps
-
 Here is the detailed template of a test case:
 ```yaml
+# in case if your test has any dependencies, you can describe them here
+depends_on:
+  - init # name of another test case without .yaml extension
+
 # in some cases you will need to run several steps 
 #   to provide expected pre-requirements for your testing.
 # they will be run in order they were described in this test case file
