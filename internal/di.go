@@ -21,11 +21,11 @@ func NewContainer(ctx *cli.Context) Container {
 func (c Container) RunTestCase() error {
 	return c.runApp(
 		fx.Invoke(
-			func(runner logic.Runner) error {
-				return runner.RunTestCases()
-			},
 			func(variables logic.Variables, services config.Services) error {
 				return variables.ReplaceServicesMetadata(services)
+			},
+			func(runner logic.Runner) error {
+				return runner.RunTestCases()
 			},
 		),
 	)

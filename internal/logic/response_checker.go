@@ -191,17 +191,14 @@ func ExtractValueByField(object reflect.Value, key string) reflect.Value {
 
 //nolint:godox
 func (c *responseChecker) checkValue(path string, expectation any, val reflect.Value) ([]models.ValidationFail, error) {
-	// todo cover proto enums
 	condition, isEmbeddedCondition := expectation.(map[string]any)
 	switch {
 	case isSlice(val) && !isEmbeddedCondition:
 		return c.checkSlice(path, expectation, val)
 	case isEmbeddedCondition:
 		return c.checkObject(path, condition, val)
-	case !isEmbeddedCondition:
-		return c.checkScalar(path, expectation, val)
 	default:
-		return nil, fmt.Errorf("unexpected case. expectation: %+v, value: %+v", expectation, val)
+		return c.checkScalar(path, expectation, val)
 	}
 }
 

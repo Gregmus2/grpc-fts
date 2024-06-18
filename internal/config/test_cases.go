@@ -22,7 +22,6 @@ type TestCase struct {
 
 type Function string
 
-// todo configuration validation, especially method existence
 type Step struct {
 	ServiceName string `json:"service"`
 	Method      string

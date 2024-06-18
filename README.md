@@ -76,6 +76,8 @@ steps:
     # in the request you should describe proto request as it would be
     #   written in json. you can get request fields from proto files.
     # TODO describe store and variables
+    
+    # TODO proto enums = strings  
     # 
     request:
       group_id: "some id"
@@ -130,6 +132,7 @@ steps:
         name: "some name"
         created: { gt: 1254568 }
       some_field: 5
+...
 ```
 
 Additional services can be added in `services.yaml` file:
@@ -140,9 +143,24 @@ Additional services can be added in `services.yaml` file:
     # metadata that will be provided in each request (optional)
     metadata:
       {KEY}: {VALUE}
+...
 ```
 
-TODO global config
+Global config:
+```yaml
+proto_root: "path to root directory with your proto files"
+proto_sources:
+  - "it can be relative path (in proto root) to directory with proto files"
+  - "or it can be relative path (in proto root) to some specific proto file"
+proto_imports:
+  - "path to additional proto imports, like google protobuf utilities for example"
+```
+
+Variables:
+```yaml
+{VARIABLE_NAME}: {VALUE}
+...
+```
 
 TODO support proto repo clone
 

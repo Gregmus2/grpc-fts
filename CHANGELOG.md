@@ -5,3 +5,6 @@
 Added:
 - CHANGELOG
 - init command to create a new project
+
+Fixed:
+- Service metadata bug
