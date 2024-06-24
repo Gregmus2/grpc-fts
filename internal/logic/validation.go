@@ -91,7 +91,6 @@ func newResponseValidator(check func(function string) bool) responseValidator {
 
 func (v responseValidator) validate(fields protoreflect.FieldDescriptors, response map[string]any) error {
 	for key, value := range response {
-		// todo allow to specify snake case
 		field := fields.ByJSONName(key)
 		if field == nil && !v.check(key) {
 			return fmt.Errorf("unexpected key %s", key)
@@ -101,6 +100,7 @@ func (v responseValidator) validate(fields protoreflect.FieldDescriptors, respon
 		}
 
 		return v.validateValue(fields, value)
+
 	}
 
 	return nil
