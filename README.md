@@ -26,7 +26,7 @@ Download
 ```bash
 wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.0/fts
 ```
-Run init command to create a new project
+Run init command to create a new project in current directory
 ```shell
 ./fts init
 ```
@@ -53,7 +53,6 @@ If everything is ok, you can run tests
 ## How it works
 
 This is a command-line tool first of all. Tests will be run just once and script will be finished.
-TODO describe options 
 
 ## How to write tests
 
@@ -75,10 +74,6 @@ steps:
     method: GetUserData
     # in the request you should describe proto request as it would be
     #   written in json. you can get request fields from proto files.
-    # TODO describe store and variables
-    
-    # TODO proto enums = strings  
-    # 
     request:
       group_id: "some id"
       filters:
@@ -113,6 +108,11 @@ steps:
     #      all - all elements of target array should satisfy the condition
     #         embedded conditions are allowed.
     #         ( all: prediction: { gt: 3 } )
+    #      store - store value to use it in another step
+    #         ( foo_property: { store: fooVariable } )
+    #         You will be able to use this value in another step as $fooVariable.
+    #         You can use them both in request and response.
+    #         You can use variables from variables.yaml or command option in the same way
     #      
     
     #      Also you have an option to use full slice match to check if all elements of target array are present 
@@ -128,10 +128,26 @@ steps:
     
     response:
       user_data:
+        id: { store: $userID } # <- I can store response value to use it in another step
         age: { gte: 13 }
         name: "some name"
         created: { gt: 1254568 }
       some_field: 5
+    # metadata that will be provided in each request (optional)
+    metadata:
+      # You can specify timeout for this step. A duration string is a possibly signed sequence of
+      #   decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
+      #   Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+      timeout: 5s
+      var1: "value1"
+      
+  - service: bar
+    method: SendEmail
+    request:
+      user_id: $userID # <- I can use stored value from previous step
+      message: "some message"
+    response:
+      status: "OK"  
 ...
 ```
 
@@ -162,9 +178,13 @@ Variables:
 ...
 ```
 
-TODO support proto repo clone
+## Protobuf
 
-## Streams
+Currently, most of proto mechanisms are supported. You can use enums, messages, oneof, maps, etc.
+If you are not sure how to describe some type in test case, think of it as if it would be json request or response,
+which you would send or receive using most of grpc clients.
+
+### Streams
 
 Currently only server side streams are supported. Within this mode, the response that you are gonna specify
 in "response" key will apply for each element of the stream until it will be matched. In order to prevent

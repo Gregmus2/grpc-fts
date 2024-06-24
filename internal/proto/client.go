@@ -80,7 +80,6 @@ func (c client) createContext(md metadata.MD) (context.Context, error) {
 		return nil, errors.Wrapf(err, "malformed grpc-timeout header")
 	}
 
-	// todo
 	ctx, _ = context.WithTimeout(ctx, timeout)
 
 	return ctx, nil

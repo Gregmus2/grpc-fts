@@ -34,7 +34,6 @@ TestCaseLoop:
 		}
 
 		for i, step := range testCase.Steps {
-			// todo add timeout option to request and apply it for stream and unary
 			md, request, err := r.prepareRequest(step.Metadata, step.Service.Metadata, step.Request)
 			if err != nil {
 				return errors.Wrapf(err, "for step %d of test case %s", i+1, testCase.Name)
