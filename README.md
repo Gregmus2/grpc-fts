@@ -24,7 +24,7 @@ target app would be too complex and expensive from time (and, perhaps, resources
 
 Download
 ```bash
-wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.0/fts
+wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.2/fts
 ```
 Run init command to create a new project in current directory
 ```shell
