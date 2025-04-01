@@ -33,7 +33,7 @@ func NewGRPCUnaryResponse(response *dynamicpb.Message, err error) (*GRPCResponse
 func NewGRPCStreamResponse(stream grpc.ClientStream, descriptor protoreflect.MessageDescriptor) (*GRPCResponse, error) {
 	response := &GRPCResponse{IsStream: true, Stream: stream, responseDescriptor: descriptor}
 
-	return response, response.StreamReceive()
+	return response, nil
 }
 
 func (r *GRPCResponse) StreamReceive() error {
@@ -52,17 +52,17 @@ func (r *GRPCResponse) UnmarshalResponse(response *dynamicpb.Message, err error)
 	var ok bool
 	r.Status, ok = status.FromError(errors.Cause(err))
 	if !ok && err != nil {
-		return errors.Wrap(err, "failed to send a request")
+		return errors.Wrap(err, "failed parsing status")
 	}
 
 	b, err := protojson.MarshalOptions{EmitUnpopulated: true}.Marshal(proto.Message(response))
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal response")
+		return errors.Wrap(err, "failed to marshal response from proto to json")
 	}
 	r.Response = make(map[string]interface{})
 	err = json.Unmarshal(b, &r.Response)
 	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal response")
+		return errors.Wrap(err, "failed to unmarshal response from json to structure")
 	}
 
 	return nil

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package test;
+
+service TestService {
+  rpc ClientStreamMethod(stream TestMessage) returns (TestMessage);
+  rpc ServerStreamMethod(TestMessage) returns (stream TestMessage);
+  rpc BidiStreamMethod(stream TestMessage) returns (stream TestMessage);
+  rpc UnaryMethod(TestMessage) returns (TestMessage);
+}
+
+message TestMessage {
+  string data = 1;
+}

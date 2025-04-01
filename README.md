@@ -24,11 +24,11 @@ target app would be too complex and expensive from time (and, perhaps, resources
 
 Download
 ```bash
-wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.0/fts
+wget https://github.com/Gregmus2/grpc-fts/releases/download/v1.4.0/fts && sudo chmod +x fts
 ```
 Run init command to create a new project in current directory
 ```shell
-./fts init
+./fts init --directory .
 ```
 
 It will create a new project with the following structure:
@@ -40,7 +40,7 @@ services.yaml   <- services definition
 variables.yaml  <- variables definition if needed
 ```
 
-Now you can fill configuration, write test cases and validate them.
+Now you can fill generated configuration, write test cases and then validate them.
 ```shell
 ./fts validate
 ```
@@ -186,9 +186,9 @@ which you would send or receive using most of grpc clients.
 
 ### Streams
 
-Currently only server side streams are supported. Within this mode, the response that you are gonna specify
-in "response" key will apply for each element of the stream until it will be matched. In order to prevent
-utility from stuck, you can specify "timeout" key under "metadata" key in step object. It will be applied for entire call (including all messages).
+Currently only server side streams are supported. Within this mode, the response should contain "stream" key 
+with array of elements. In order to prevent utility from stuck, you can specify "timeout" key under "metadata" key in step object. 
+It will be applied for entire call (including all messages).
 Status checks will apply for each element of the stream.
 
 Example
@@ -201,10 +201,11 @@ steps:
     metadata:
       timeout: 5s
     response:
-      user_data:
-        age: { gte: 13 }
-        name: "some name"
-        created: { gt: 1254568 }
+      stream:
+        - user_data:
+            age: { gte: 13 }
+            name: "some name"
+            created: { gt: 1254568 }
       some_field: 5
 ```
 

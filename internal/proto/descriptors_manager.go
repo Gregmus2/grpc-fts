@@ -23,13 +23,13 @@ func NewDescriptorsManager(cfg *config.Global, testCases config.TestCases) (Desc
 	}
 
 	files, err := collectFiles(cfg.ProtoSources, cfg.ProtoRoot)
+	if err != nil {
+		return nil, errors.Wrap(err, "error collecting proto sources")
+	}
 	c := &protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 			ImportPaths: append(cfg.ProtoImports, cfg.ProtoRoot),
 		}),
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "error collecting proto sources")
 	}
 
 	compiled, err := c.Compile(context.Background(), files...)
