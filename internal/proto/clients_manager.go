@@ -19,7 +19,7 @@ func NewClientsManager(services config.Services, manager DescriptorsManager) (Cl
 			return nil, errors.Wrapf(err, "error creating Connection for service %v", service)
 		}
 
-		cm.clients[name] = newClient(conn, manager)
+		cm.clients[name] = NewClient(conn, manager)
 	}
 
 	return cm, nil

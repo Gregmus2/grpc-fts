@@ -20,7 +20,7 @@ type client struct {
 	dec     *protojson.UnmarshalOptions
 }
 
-func newClient(conn Connection, manager DescriptorsManager) Client {
+func NewClient(conn Connection, manager DescriptorsManager) Client {
 	return &client{conn: conn, dec: &protojson.UnmarshalOptions{
 		Resolver: nil,
 	}, manager: manager}

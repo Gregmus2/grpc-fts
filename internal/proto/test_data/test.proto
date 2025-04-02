@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package test;
 
+option go_package = "github.com/Gregmus2/grpc-fts";
+
 service TestService {
   rpc ClientStreamMethod(stream TestMessage) returns (TestMessage);
   rpc ServerStreamMethod(TestMessage) returns (stream TestMessage);
