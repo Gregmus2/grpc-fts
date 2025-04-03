@@ -20,7 +20,7 @@ type grpcConnection struct {
 	conn *grpc.ClientConn
 }
 
-func newConnection(address string, userTLS *models.TLS) (connection, error) {
+func NewConnection(address string, userTLS *models.TLS) (Connection, error) {
 	opts, err := buildTLS(userTLS)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to handle TLS")

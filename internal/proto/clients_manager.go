@@ -14,12 +14,12 @@ func NewClientsManager(services config.Services, manager DescriptorsManager) (Cl
 		clients: make(map[string]Client, len(services)),
 	}
 	for name, service := range services {
-		conn, err := newConnection(service.Address, service.TLS)
+		conn, err := NewConnection(service.Address, service.TLS)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error creating connection for service %v", service)
+			return nil, errors.Wrapf(err, "error creating Connection for service %v", service)
 		}
 
-		cm.clients[name] = newClient(conn, manager)
+		cm.clients[name] = NewClient(conn, manager)
 	}
 
 	return cm, nil

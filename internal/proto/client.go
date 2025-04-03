@@ -2,6 +2,7 @@ package proto
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -14,12 +15,12 @@ import (
 )
 
 type client struct {
-	conn    connection
+	conn    Connection
 	manager DescriptorsManager
 	dec     *protojson.UnmarshalOptions
 }
 
-func newClient(conn connection, manager DescriptorsManager) Client {
+func NewClient(conn Connection, manager DescriptorsManager) Client {
 	return &client{conn: conn, dec: &protojson.UnmarshalOptions{
 		Resolver: nil,
 	}, manager: manager}
@@ -31,41 +32,81 @@ func (c client) Invoke(fullName protoreflect.FullName, msg []byte, md metadata.M
 	}
 
 	descriptor := c.manager.GetDescriptor(fullName)
-	req, err := c.BuildRequest(descriptor.Input(), msg)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to build request")
-	}
-	ctx, err := c.createContext(md)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create context")
-	}
 
 	switch {
-	case descriptor.IsStreamingClient():
-		return nil, errors.New("streaming client is not supported yet")
-	case descriptor.IsStreamingServer():
-		streamDesc := &grpc.StreamDesc{
-			StreamName:    string(descriptor.Name()),
-			ServerStreams: descriptor.IsStreamingServer(),
-			ClientStreams: descriptor.IsStreamingClient(),
-		}
-		stream, err := c.conn.Stream(ctx, string(descriptor.FullName()), streamDesc)
+	case descriptor.IsStreamingClient() && descriptor.IsStreamingServer():
+		stream, err := c.createStream(md, descriptor)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create stream")
 		}
 
+		err = c.sendStreamRequests(msg, descriptor, stream)
+		if err != nil {
+			return nil, err
+		}
+
+		return NewGRPCStreamResponse(stream, descriptor.Output())
+	case descriptor.IsStreamingClient():
+		stream, err := c.createStream(md, descriptor)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create stream")
+		}
+
+		err = c.sendStreamRequests(msg, descriptor, stream)
+		if err != nil {
+			return nil, err
+		}
+
+		res := dynamicpb.NewMessage(descriptor.Output())
+
+		return NewGRPCUnaryResponse(res, err)
+	case descriptor.IsStreamingServer():
+		stream, err := c.createStream(md, descriptor)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create stream")
+		}
+
+		req, err := c.BuildRequest(descriptor.Input(), msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build request")
+		}
 		if err := stream.SendMsg(req); err != nil {
-			return nil, errors.Wrapf(err, "failed to send a RPC to the server stream '%s'", streamDesc.StreamName)
+			return nil, errors.Wrapf(err, "failed to send a RPC to the server stream '%s'", descriptor.FullName())
 		}
 
 		return NewGRPCStreamResponse(stream, descriptor.Output())
 	default:
+		req, err := c.BuildRequest(descriptor.Input(), msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build request")
+		}
+		ctx, err := c.createContext(md)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create context")
+		}
 		res := dynamicpb.NewMessage(descriptor.Output())
 		// todo: handle header and trailer
 		_, _, err = c.conn.Invoke(ctx, string(fullName), req, res)
 
 		return NewGRPCUnaryResponse(res, err)
 	}
+}
+
+func (c client) createStream(md metadata.MD, descriptor protoreflect.MethodDescriptor) (grpc.ClientStream, error) {
+	ctx, err := c.createContext(md)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create context")
+	}
+	streamDesc := &grpc.StreamDesc{
+		StreamName:    string(descriptor.Name()),
+		ServerStreams: descriptor.IsStreamingServer(),
+		ClientStreams: descriptor.IsStreamingClient(),
+	}
+	stream, err := c.conn.Stream(ctx, string(descriptor.FullName()), streamDesc)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create stream")
+	}
+	return stream, nil
 }
 
 func (c client) createContext(md metadata.MD) (context.Context, error) {
@@ -96,4 +137,33 @@ func (c client) BuildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*
 	}
 
 	return req, nil
+}
+
+func (c client) sendStreamRequests(msg []byte, descriptor protoreflect.MethodDescriptor, stream grpc.ClientStream) error {
+	// parse array of requests from yaml (underlying json)
+	requests := make([]interface{}, 0)
+	err := json.Unmarshal(msg, &requests)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal stream requests")
+	}
+	for _, anyRequest := range requests {
+		jsonRequest, err := json.Marshal(anyRequest)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal stream request")
+		}
+		req, err := c.BuildRequest(descriptor.Input(), jsonRequest)
+		if err != nil {
+			return errors.Wrap(err, "failed to build request")
+		}
+		if err := stream.SendMsg(req); err != nil {
+			return errors.Wrapf(err, "failed to send a RPC to the server stream '%s'", descriptor.FullName())
+		}
+	}
+
+	err = stream.CloseSend()
+	if err != nil {
+		return errors.Wrap(err, "failed to close the stream")
+	}
+
+	return nil
 }

@@ -21,7 +21,7 @@ type Client interface {
 	BuildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*dynamicpb.Message, error)
 }
 
-type connection interface {
+type Connection interface {
 	Invoke(ctx context.Context, fullName string, req, res interface{}) (header, trailer metadata.MD, err error)
 	Stream(ctx context.Context, fullName string, streamDesc *grpc.StreamDesc) (grpc.ClientStream, error)
 }

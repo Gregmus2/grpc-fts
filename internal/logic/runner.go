@@ -8,6 +8,7 @@ import (
 	"github.com/res-am/grpc-fts/internal/proto"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
+	"io"
 )
 
 type runner struct {
@@ -69,17 +70,28 @@ TestCaseLoop:
 }
 
 func (r *runner) check(expectedStatus *config.Status, expectedResponse map[string]any, response *proto.GRPCResponse) ([]models.ValidationFail, error) {
-	statusFails, err := r.checker.CheckStatus(response.Status, expectedStatus)
-	if err != nil {
-		return statusFails, err
+	if !response.IsStream {
+		statusFails, err := r.checker.CheckStatus(response.Status, expectedStatus)
+		if err != nil {
+			return statusFails, err
+		}
+
+		return r.checker.CheckResponse(response.Response, expectedResponse)
 	}
 
-	if !response.IsStream {
-		return r.checker.CheckResponse(response.Response, expectedResponse)
+	var expectedStream []interface{}
+	if expectedResponse != nil && expectedResponse["stream"] != nil {
+		switch v := expectedResponse["stream"].(type) {
+		case []interface{}:
+			expectedStream = v
+		}
 	}
 
 	for i := 0; ; i++ {
 		err := response.StreamReceive()
+		if errors.Is(err, io.EOF) {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, errors.Wrap(err, "error on stream receiving")
 		}
@@ -89,7 +101,14 @@ func (r *runner) check(expectedStatus *config.Status, expectedResponse map[strin
 			return statusFails, err
 		}
 
-		fails, err := r.checker.CheckResponse(response.Response, expectedResponse)
+		var expectedStreamMessage map[string]any
+		if expectedStream != nil && len(expectedStream) > i {
+			switch v := expectedStream[i].(type) {
+			case map[string]any:
+				expectedStreamMessage = v
+			}
+		}
+		fails, err := r.checker.CheckResponse(response.Response, expectedStreamMessage)
 		if err != nil && !errors.Is(err, ErrValidationFailed) {
 			return nil, errors.Wrapf(err, "error checking stream message #%d", i)
 		}
