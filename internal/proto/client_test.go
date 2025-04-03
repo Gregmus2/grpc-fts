@@ -113,18 +113,18 @@ func TestClient_Invoke(t *testing.T) {
 
 	client := proto.NewClient(conn, descriptorManager)
 	res, err := client.Invoke(serviceDesc.Methods().ByName("UnaryMethod").FullName(), []byte(`{"data": "test"}`), nil)
-	assert.Equal(t, codes.OK, res.Status.Code())
 	assert.NoError(t, err, "error on invoke")
+	assert.Equal(t, codes.OK, res.Status.Code())
 
 	res, err = client.Invoke(serviceDesc.Methods().ByName("ClientStreamMethod").FullName(), []byte(`[{"data": "test"}, {"data": "test2"}]`), nil)
-	assert.Equal(t, codes.OK, res.Status.Code())
 	assert.NoError(t, err, "error on invoke")
+	assert.Equal(t, codes.OK, res.Status.Code())
 
 	res, err = client.Invoke(serviceDesc.Methods().ByName("ServerStreamMethod").FullName(), []byte(`{"data": "test2"}`), nil)
-	assert.Equal(t, codes.OK, res.Status.Code())
 	assert.NoError(t, err, "error on invoke")
+	assert.Equal(t, codes.OK, res.Status.Code())
 
 	res, err = client.Invoke(serviceDesc.Methods().ByName("BidiStreamMethod").FullName(), []byte(`[{"data": "test"}, {"data": "test2"}]`), nil)
-	assert.Equal(t, codes.OK, res.Status.Code())
 	assert.NoError(t, err, "error on invoke")
+	assert.Equal(t, codes.OK, res.Status.Code())
 }
