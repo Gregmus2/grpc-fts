@@ -47,7 +47,7 @@ func (v validator) validateStep(step config.Step) error {
 	fullName := step.BuildProtoFullName()
 	descriptor := v.manager.GetDescriptor(fullName)
 
-	if err := v.validateRequest(step.ServiceName, descriptor.Input(), step.Request); err != nil {
+	if err := v.validateRequest(step.ServiceName, descriptor.Input(), descriptor.IsStreamingClient(), step.Request); err != nil {
 		return errors.Wrap(err, "request")
 	}
 
@@ -58,8 +58,30 @@ func (v validator) validateStep(step config.Step) error {
 	return nil
 }
 
-func (v validator) validateRequest(service string, input protoreflect.MessageDescriptor, request json.RawMessage) error {
-	_, err := v.clientsManager.GetClient(service).BuildRequest(input, request)
+func (v validator) validateRequest(service string, input protoreflect.MessageDescriptor, isStream bool, request json.RawMessage) error {
+	client := v.clientsManager.GetClient(service)
+
+	if isStream {
+		requests := make([]interface{}, 0)
+		err := json.Unmarshal(request, &requests)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal stream requests")
+		}
+		for _, anyRequest := range requests {
+			jsonRequest, err := json.Marshal(anyRequest)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal stream request")
+			}
+			_, err = client.BuildRequest(input, jsonRequest)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	_, err := client.BuildRequest(input, request)
 	if err != nil {
 		return err
 	}
@@ -78,7 +100,30 @@ func (v validator) validateResponse(fields protoreflect.FieldDescriptors, respon
 		return errors.Wrap(err, "error on unmarshalling response")
 	}
 
-	return newResponseValidator(v.checker.FunctionExists).validate(fields, responseMap)
+	validator := newResponseValidator(v.checker.FunctionExists)
+
+	var expectedStream []interface{}
+	if responseMap != nil && responseMap["stream"] != nil {
+		switch v := responseMap["stream"].(type) {
+		case []interface{}:
+			expectedStream = v
+		}
+
+		for _, item := range expectedStream {
+			itemMap, ok := item.(map[string]any)
+			if !ok {
+				return fmt.Errorf("unexpected type %T", item)
+			}
+
+			if err := validator.validate(fields, itemMap); err != nil {
+				return errors.Wrap(err, "stream response")
+			}
+		}
+
+		return nil
+	}
+
+	return validator.validate(fields, responseMap)
 }
 
 type responseValidator struct {

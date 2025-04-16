@@ -128,6 +128,9 @@ func (c client) createContext(md metadata.MD) (context.Context, error) {
 
 func (c client) BuildRequest(desc protoreflect.MessageDescriptor, msg []byte) (*dynamicpb.Message, error) {
 	req := dynamicpb.NewMessage(desc)
+	if len(msg) == 0 {
+		msg = []byte("{}")
+	}
 	err := c.dec.Unmarshal(msg, req)
 	if errors.Is(err, io.EOF) {
 		return nil, io.EOF

@@ -59,7 +59,7 @@ TestCaseLoop:
 				break TestCaseLoop
 			}
 			if err != nil {
-				return errors.Wrapf(err, "response validation error")
+				return errors.Wrapf(err, "response validation error. step %d of test case %s\", i, testCase.Name", i, testCase.Name)
 			}
 		}
 
@@ -87,9 +87,14 @@ func (r *runner) check(expectedStatus *config.Status, expectedResponse map[strin
 		}
 	}
 
+	var passed int
 	for i := 0; ; i++ {
 		err := response.StreamReceive()
 		if errors.Is(err, io.EOF) {
+			if passed < len(expectedStream) {
+				return nil, errors.Errorf("expected %d stream messages, but got %d", len(expectedStream), passed)
+			}
+
 			return nil, nil
 		}
 		if err != nil {
@@ -113,10 +118,11 @@ func (r *runner) check(expectedStatus *config.Status, expectedResponse map[strin
 			return nil, errors.Wrapf(err, "error checking stream message #%d", i)
 		}
 
-		// successful exit
-		if len(fails) == 0 {
-			return nil, nil
+		if len(fails) > 0 {
+			return fails, ErrValidationFailed
 		}
+
+		passed++
 	}
 }
 

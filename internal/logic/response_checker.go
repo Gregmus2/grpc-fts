@@ -261,6 +261,8 @@ func (c *responseChecker) checkSlice(path string, expectation any, val reflect.V
 
 				break
 			}
+
+			return embeddedFails, ErrValidationFailed
 		}
 	}
 
